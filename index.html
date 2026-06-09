@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kitnets Beth – Contratos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --verde: #2D6A4F;
+    --verde-claro: #52B788;
+    --fundo: #F7F5F0;
+    --branco: #FFFFFF;
+    --texto: #1B1B1B;
+    --cinza: #6B7280;
+    --borda: #D1D5DB;
+    --erro: #DC2626;
+    --tab-inativa: #E8EAE6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--verde);
+    color: white;
+    padding: 18px 20px 14px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 1.35rem;
+    letter-spacing: 0.03em;
+    font-weight: normal;
+  }
+  header p {
+    font-size: 0.78rem;
+    opacity: 0.75;
+    margin-top: 3px;
+    font-family: Arial, sans-serif;
+  }
+
+  .abas {
+    display: flex;
+    background: var(--tab-inativa);
+    border-bottom: 2px solid var(--verde-claro);
+  }
+  .aba {
+    flex: 1;
+    padding: 13px 10px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--cinza);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, color 0.2s;
+  }
+  .aba.ativa {
+    background: var(--branco);
+    color: var(--verde);
+    border-bottom: 3px solid var(--verde);
+    margin-bottom: -2px;
+  }
+
+  .painel {
+    display: none;
+    padding: 20px 18px 40px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .painel.ativo { display: block; }
+
+  .secao-titulo {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--verde);
+    font-family: Arial, sans-serif;
+    margin: 22px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--verde-claro);
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-family: Arial, sans-serif;
+    color: var(--cinza);
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: Arial, sans-serif;
+    background: var(--branco);
+    color: var(--texto);
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--verde-claro);
+    box-shadow: 0 0 0 2px rgba(82,183,136,0.2);
+  }
+
+  .linha-dupla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn-gerar {
+    display: block;
+    width: 100%;
+    margin-top: 28px;
+    padding: 15px;
+    background: var(--verde);
+    color: white;
+    font-size: 1rem;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s;
+  }
+  .btn-gerar:hover { background: #245a42; }
+  .btn-gerar:active { background: #1a4331; }
+
+  .aviso {
+    font-size: 0.78rem;
+    font-family: Arial, sans-serif;
+    color: var(--cinza);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  .campo-obrigatorio {
+    border-color: var(--erro) !important;
+  }
+
+  .msg-erro {
+    font-size: 0.75rem;
+    color: var(--erro);
+    font-family: Arial, sans-serif;
+    margin-top: 3px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏠 Kitnets Beth</h1>
+  <p>Rua Soldado Venceslau Spancesk · Campo Grande, RJ</p>
+</header>
+
+<div class="abas">
+  <button class="aba ativa" onclick="trocarAba('contrato')">📄 Contrato</button>
+  <button class="aba" onclick="trocarAba('comprovante')">🧾 Comprovante</button>
+</div>
+
+<!-- ========== ABA CONTRATO ========== -->
+<div id="painel-contrato" class="painel ativo">
+
+  <div class="secao-titulo">Dados do Locatário</div>
+
+  <label>Nome completo *</label>
+  <input type="text" id="c-nome" placeholder="Nome do inquilino">
+  <div class="msg-erro" id="err-c-nome">Campo obrigatório</div>
+
+  <div class="linha-dupla">
+    <div>
+      <label>CPF *</label>
+      <input type="text" id="c-cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascCPF(this)">
+      <div class="msg-erro" id="err-c-cpf">Campo obrigatório</div>
+    </div>
+    <div>
+      <label>Documento (RG)</label>
+      <input type="text" id="c-rg" placeholder="RG">
+    </div>
+  </div>
+
+  <div class="linha-dupla">
+    <div>
+      <label>Telefone *</label>
+      <input type="text" id="c-tel" placeholder="(21) 99999-9999" maxlength="15" oninput="mascTel(this)">
+      <div class="msg-erro" id="err-c-tel">Campo obrigatório</div>
+    </div>
+    <div>
+      <label>Contato de parente</label>
+      <input type="text" id="c-parente" placeholder="Nome e telefone">
+    </div>
+  </div>
+
+  <label>Endereço anterior</label>
+  <input type="text" id="c-endant" placeholder="Rua, número, bairro...">
+
+  <div class="secao-titulo">Condições da Locação</div>
+
+  <div class="linha-dupla">
+    <div>
+      <label>Valor do aluguel (R$) *</label>
+      <input type="text" id="c-valor" placeholder="Ex: 650,00" oninput="mascValor(this)">
+      <div class="msg-erro" id="err-c-valor">Campo obrigatório</div>
+    </div>
+    <div>
+      <label>Dia do vencimento *</label>
+      <input type="number" id="c-dia" placeholder="Ex: 5" min="1" max="31">
+      <div class="msg-erro" id="err-c-dia">Campo obrigatório</div>
+    </div>
+  </div>
+
+  <label>Número da kitnet / Identificação</label>
+  <input type="text" id="c-kitnet" placeholder="Ex: Kitnet 03 – Fundos">
+
+  <div class="linha-dupla">
+    <div>
+      <label>Data de início *</label>
+      <input type="date" id="c-datainicio">
+      <div class="msg-erro" id="err-c-datainicio">Campo obrigatório</div>
+    </div>
+    <div>
+      <label>Local de assinatura</label>
+      <input type="text" id="c-local" placeholder="Campo Grande, RJ">
+    </div>
+  </div>
+
+  <div class="secao-titulo">Taxa de Manutenção (R$ 200,00)</div>
+
+  <label>Situação da taxa *</label>
+  <select id="c-taxa" onchange="mostrarDataTaxa()">
+    <option value="pago">✅ Já foi paga no ato da assinatura</option>
+    <option value="prazo">📅 Será paga em data acordada</option>
+    <option value="parcelado">💳 Será paga junto ao primeiro aluguel</option>
+  </select>
+
+  <div id="bloco-data-taxa" style="display:none; margin-top:10px;">
+    <label>Data combinada para pagamento da taxa</label>
+    <input type="date" id="c-datatax">
+  </div>
+
+  <button class="btn-gerar" onclick="gerarContrato()">⬇ Gerar Contrato em PDF</button>
+  <p class="aviso">O arquivo será baixado automaticamente.</p>
+</div>
+
+<!-- ========== ABA COMPROVANTE ========== -->
+<div id="painel-comprovante" class="painel">
+
+  <div class="secao-titulo">Dados do Pagamento</div>
+
+  <label>Nome do locatário *</label>
+  <input type="text" id="p-nome" placeholder="Nome do inquilino">
+  <div class="msg-erro" id="err-p-nome">Campo obrigatório</div>
+
+  <label>Número da kitnet / Identificação</label>
+  <input type="text" id="p-kitnet" placeholder="Ex: Kitnet 03 – Fundos">
+
+  <div class="linha-dupla">
+    <div>
+      <label>Valor pago (R$) *</label>
+      <input type="text" id="p-valor" placeholder="Ex: 650,00" oninput="mascValor(this)">
+      <div class="msg-erro" id="err-p-valor">Campo obrigatório</div>
+    </div>
+    <div>
+      <label>Data do pagamento *</label>
+      <input type="date" id="p-data">
+      <div class="msg-erro" id="err-p-data">Campo obrigatório</div>
+    </div>
+  </div>
+
+  <label>Referente ao mês/período *</label>
+  <input type="text" id="p-periodo" placeholder="Ex: Aluguel de Julho/2025">
+  <div class="msg-erro" id="err-p-periodo">Campo obrigatório</div>
+
+  <label>Forma de pagamento</label>
+  <select id="p-forma">
+    <option value="Pix">Pix</option>
+    <option value="Dinheiro">Dinheiro</option>
+    <option value="Transferência">Transferência bancária</option>
+    <option value="Outro">Outro</option>
+  </select>
+
+  <label>Observação (opcional)</label>
+  <input type="text" id="p-obs" placeholder="Ex: Inclui taxa de manutenção">
+
+  <button class="btn-gerar" onclick="gerarComprovante()">⬇ Gerar Comprovante em PDF</button>
+  <p class="aviso">O arquivo será baixado automaticamente.</p>
+</div>
+
+<script>
+// ===== TAXA DE MANUTENÇÃO =====
+function mostrarDataTaxa() {
+  const val = document.getElementById('c-taxa').value;
+  document.getElementById('bloco-data-taxa').style.display = (val === 'prazo') ? 'block' : 'none';
+}
+
+// ===== ABAS =====
+function trocarAba(qual) {
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+  document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'));
+  document.getElementById('painel-' + qual).classList.add('ativo');
+  event.target.classList.add('ativa');
+}
+
+// ===== MÁSCARAS =====
+function mascCPF(input) {
+  let v = input.value.replace(/\D/g, '').substring(0,11);
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  input.value = v;
+}
+function mascTel(input) {
+  let v = input.value.replace(/\D/g, '').substring(0,11);
+  if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+  input.value = v;
+}
+function mascValor(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (!v) { input.value = ''; return; }
+  v = (parseInt(v) / 100).toFixed(2).replace('.', ',');
+  input.value = v;
+}
+
+// ===== VALIDAÇÃO =====
+function validar(campos) {
+  let ok = true;
+  campos.forEach(id => {
+    const el = document.getElementById(id);
+    const err = document.getElementById('err-' + id);
+    if (!el.value.trim()) {
+      el.classList.add('campo-obrigatorio');
+      if (err) err.style.display = 'block';
+      ok = false;
+    } else {
+      el.classList.remove('campo-obrigatorio');
+      if (err) err.style.display = 'none';
+    }
+  });
+  return ok;
+}
+
+// ===== FORMATAÇÃO DE DATA =====
+function fmtData(str) {
+  if (!str) return '___/___/______';
+  const [y, m, d] = str.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ===== VALOR POR EXTENSO (básico) =====
+function valorExtenso(str) {
+  if (!str) return '';
+  const num = parseFloat(str.replace(',', '.'));
+  if (isNaN(num)) return str;
+  const inteiros = [
+    '', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove',
+    'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete',
+    'dezoito', 'dezenove'
+  ];
+  const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta',
+    'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos',
+    'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+  function parteInt(n) {
+    if (n === 0) return 'zero';
+    if (n === 100) return 'cem';
+    let r = '';
+    if (n >= 1000) {
+      const m = Math.floor(n / 1000);
+      r += (m === 1 ? 'mil' : inteiros[m] + ' mil');
+      n %= 1000;
+      if (n > 0) r += ' e ';
+    }
+    if (n >= 100) {
+      r += centenas[Math.floor(n / 100)];
+      n %= 100;
+      if (n > 0) r += ' e ';
+    }
+    if (n >= 20) {
+      r += dezenas[Math.floor(n / 10)];
+      n %= 10;
+      if (n > 0) r += ' e ' + inteiros[n];
+    } else if (n > 0) {
+      r += inteiros[n];
+    }
+    return r;
+  }
+
+  const reais = Math.floor(num);
+  const centavos = Math.round((num - reais) * 100);
+  let texto = parteInt(reais) + (reais === 1 ? ' real' : ' reais');
+  if (centavos > 0) texto += ' e ' + parteInt(centavos) + (centavos === 1 ? ' centavo' : ' centavos');
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+// ===== JSPDF HELPERS =====
+function novaLinha(doc, x, y, espaco) {
+  return y + (espaco || 7);
+}
+
+function textoBlocado(doc, texto, x, largura, y, tamanho) {
+  doc.setFontSize(tamanho || 10);
+  const linhas = doc.splitTextToSize(texto, largura);
+  doc.text(linhas, x, y);
+  return y + linhas.length * (tamanho ? tamanho * 0.45 : 5);
+}
+
+// ===== GERAR CONTRATO =====
+function gerarContrato() {
+  if (!validar(['c-nome','c-cpf','c-tel','c-valor','c-dia','c-datainicio'])) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const margL = 20, margR = 20, largUtil = 210 - margL - margR;
+  let y = 20;
+
+  // Cabeçalho
+  doc.setFillColor(45, 106, 79);
+  doc.rect(0, 0, 210, 14, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.text('CONTRATO DE LOCAÇÃO RESIDENCIAL – KITNET', 105, 9, { align: 'center' });
+
+  doc.setTextColor(30,30,30);
+  y = 26;
+
+  const nome    = document.getElementById('c-nome').value.trim().toUpperCase();
+  const cpf     = document.getElementById('c-cpf').value.trim();
+  const rg      = document.getElementById('c-rg').value.trim() || '—';
+  const tel     = document.getElementById('c-tel').value.trim();
+  const parente = document.getElementById('c-parente').value.trim() || '—';
+  const endant  = document.getElementById('c-endant').value.trim() || '—';
+  const valor   = document.getElementById('c-valor').value.trim();
+  const dia     = document.getElementById('c-dia').value.trim();
+  const kitnet  = document.getElementById('c-kitnet').value.trim() || 'Kitnet';
+  const datainicio = document.getElementById('c-datainicio').value;
+  const local   = document.getElementById('c-local').value.trim() || 'Campo Grande, RJ';
+  const taxa    = document.getElementById('c-taxa').value;
+  const datatax = document.getElementById('c-datatax').value;
+
+  function titulo(t) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(45,106,79);
+    doc.text(t, margL, y);
+    y += 5;
+    doc.setTextColor(30,30,30);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+  }
+
+  function linha(label, val) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9.5);
+    doc.text(label, margL, y);
+    doc.setFont('helvetica','normal');
+    doc.text(val, margL + doc.getTextWidth(label) + 2, y);
+    y += 6.5;
+  }
+
+  function bloco(txt) {
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    const linhas = doc.splitTextToSize(txt, largUtil);
+    doc.text(linhas, margL, y);
+    y += linhas.length * 5 + 2;
+  }
+
+  function separador() {
+    doc.setDrawColor(180,180,180);
+    doc.line(margL, y, 210 - margR, y);
+    y += 4;
+  }
+
+  // PARTES
+  titulo('LOCADORA');
+  linha('Nome:', 'Elizabeth Pacheco da Silva');
+  linha('CPF:', '044.584.227-07');
+  linha('Contato:', '(21) 98005-1931');
+  separador();
+
+  titulo('LOCATÁRIO(A)');
+  linha('Nome:', nome);
+  linha('CPF:', cpf + '   RG:', );
+  // linha dupla CPF e RG
+  y -= 6.5;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
+  doc.text('CPF:', margL, y);
+  doc.setFont('helvetica','normal');
+  doc.text(cpf, margL + doc.getTextWidth('CPF:') + 2, y);
+  doc.setFont('helvetica','bold');
+  doc.text('RG:', margL + 60, y);
+  doc.setFont('helvetica','normal');
+  doc.text(rg, margL + 60 + doc.getTextWidth('RG:') + 2, y);
+  y += 6.5;
+
+  linha('Telefone:', tel + '   Contato de parente: ' + parente);
+  linha('Endereço anterior:', endant);
+  separador();
+
+  titulo('IMÓVEL');
+  bloco('Kitnet: ' + kitnet + '\nLocalizada na Rua Soldado Venceslau Spancesk, próximo à Estrada da Cachamorra (altura McDonald\'s), Campo Grande, Rio de Janeiro.');
+  separador();
+
+  titulo('CONDIÇÕES FINANCEIRAS');
+  linha('Valor do aluguel:', 'R$ ' + valor + ' (' + valorExtenso(valor) + ')');
+  linha('Vencimento:', 'Todo dia ' + dia + ' de cada mês');
+  linha('Início da locação:', fmtData(datainicio));
+  separador();
+
+  // CLÁUSULAS
+  const clausulas = [
+    ['1. OBJETO DA LOCAÇÃO',
+     'O presente contrato tem por objeto a locação residencial da kitnet descrita acima, incluindo suas áreas internas e uso compartilhado de áreas externas, quando houver.'],
+    ['2. PRAZO DA LOCAÇÃO',
+     'Prazo mínimo de 6 (seis) meses. Após esse período, a locação será renovada automaticamente por prazo indeterminado, podendo ser rescindida por qualquer das partes mediante aviso prévio.'],
+    ['3. PAGAMENTO',
+     'O aluguel deverá ser pago até a data estipulada. O não pagamento na data correta acarretará, a partir do dia seguinte, a incidência de multa de 10% sobre o valor do aluguel, acrescida de juros diários até a quitação.\n\nA entrega das chaves somente ocorrerá após o pagamento do primeiro aluguel e da taxa de manutenção prevista neste contrato.'],
+    ['3.1. TAXA DE MANUTENÇÃO E PINTURA',
+     (() => {
+       const base = 'O(A) LOCATÁRIO(A) pagará à LOCADORA a quantia de R$ 200,00 (duzentos reais), referente à taxa de manutenção, pintura, limpeza e preparação do imóvel para locação.\n\nEsta taxa possui caráter administrativo e não é considerada caução ou adiantamento de aluguel, sendo não reembolsável em qualquer hipótese.';
+       if (taxa === 'pago') {
+         return 'Esta taxa foi paga no ato da assinatura deste contrato, quitando integralmente a obrigação do(a) LOCATÁRIO(A) referente à manutenção, pintura, limpeza e preparação do imóvel.\n\nA taxa possui caráter administrativo, não sendo considerada caução ou adiantamento de aluguel, e é não reembolsável.';
+       } else if (taxa === 'parcelado') {
+         return 'A taxa de manutenção de R$ 200,00 (duzentos reais) será paga pelo(a) LOCATÁRIO(A) juntamente com o pagamento do primeiro aluguel, devendo ser quitada impreterivelmente até a data de vencimento do primeiro mês de locação.\n\nEsta taxa possui caráter administrativo e não é considerada caução ou adiantamento de aluguel, sendo não reembolsável em qualquer hipótese.';
+       } else {
+         const dtFmt = datatax ? fmtData(datatax) : '___/___/______';
+         return 'A taxa de manutenção de R$ 200,00 (duzentos reais) deverá ser paga pelo(a) LOCATÁRIO(A) até o dia ' + dtFmt + ', data acordada entre as partes. O não pagamento até essa data constituirá inadimplência, sujeitando o(a) LOCATÁRIO(A) às penalidades previstas neste contrato.\n\nEsta taxa possui caráter administrativo e não é considerada caução ou adiantamento de aluguel, sendo não reembolsável em qualquer hipótese.';
+       }
+     })()],
+    ['4. ÁGUA E LUZ',
+     'Estão inclusos no valor da locação, desde que utilizados de forma consciente. O uso excessivo poderá gerar cobrança adicional.'],
+    ['5. REGRAS DO IMÓVEL',
+     '• Proibido sublocar ou dividir o imóvel sem autorização da locadora.\n• Proibido alterar estrutura, paredes, instalações hidráulicas ou elétricas.\n• Proibido barulho após 22h.\n• Proibido o uso de drogas ilícitas dentro do imóvel.\n• Proibido manter animais sem autorização prévia da locadora.'],
+    ['6. MANUTENÇÃO E ZELO',
+     'O locatário deverá comunicar imediatamente qualquer problema no imóvel. Danos causados por mau uso serão de responsabilidade do locatário.'],
+    ['7. VISTORIA DE ENTRADA E SAÍDA',
+     'Será realizada vistoria com registro fotográfico no início e no término da locação. O imóvel deverá ser devolvido limpo, sem danos e sem lixo.'],
+    ['8. RESCISÃO POR INADIMPLÊNCIA',
+     'O atraso no pagamento do aluguel por período superior a 15 (quinze) dias, sem retorno ou justificativa por parte do(a) LOCATÁRIO(a), autoriza a LOCADORA a iniciar o processo de desocupação do imóvel.'],
+    ['9. VENDA DO IMÓVEL',
+     'Em caso de venda do imóvel durante a vigência deste contrato, o(a) LOCATÁRIO(a) compromete-se a desocupar a kitnet no prazo de 30 (trinta) dias, contados a partir da comunicação formal da LOCADORA, não sendo devida qualquer indenização, abatimento ou multa rescisória.'],
+    ['10. ASSINATURA DIGITAL',
+     'As partes reconhecem como válida e eficaz a assinatura eletrônica deste contrato, realizada por meio da plataforma Autentique, produzindo os mesmos efeitos jurídicos da assinatura manuscrita, nos termos da legislação brasileira vigente.'],
+  ];
+
+  clausulas.forEach(([tit, txt]) => {
+    // Verificar se precisa nova página
+    if (y > 250) { doc.addPage(); y = 20; }
+    titulo(tit);
+    bloco(txt);
+    y += 2;
+  });
+
+  // Assinaturas
+  if (y > 230) { doc.addPage(); y = 20; }
+  y += 6;
+  separador();
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9.5);
+  doc.text('Local e data: ' + local + ', ' + fmtData(datainicio), margL, y);
+  y += 14;
+
+  doc.line(margL, y, margL + 70, y);
+  doc.line(210 - margR - 70, y, 210 - margR, y);
+  y += 5;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8.5);
+  doc.text('LOCADORA – Elizabeth Pacheco da Silva', margL, y);
+  doc.text('LOCATÁRIO(A) – ' + nome, 210 - margR - 70, y);
+
+  // Rodapé
+  y += 14;
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(150,150,150);
+  doc.text('Documento gerado em ' + new Date().toLocaleDateString('pt-BR'), 105, y, { align: 'center' });
+
+  doc.save('Contrato_' + nome.split(' ')[0] + '_' + fmtData(datainicio).replace(/\//g,'-') + '.pdf');
+}
+
+// ===== GERAR COMPROVANTE =====
+function gerarComprovante() {
+  if (!validar(['p-nome','p-valor','p-data','p-periodo'])) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const nome    = document.getElementById('p-nome').value.trim().toUpperCase();
+  const kitnet  = document.getElementById('p-kitnet').value.trim() || '—';
+  const valor   = document.getElementById('p-valor').value.trim();
+  const data    = document.getElementById('p-data').value;
+  const periodo = document.getElementById('p-periodo').value.trim();
+  const forma   = document.getElementById('p-forma').value;
+  const obs     = document.getElementById('p-obs').value.trim();
+
+  const margL = 25, margR = 25, largUtil = 210 - margL - margR;
+  let y = 20;
+
+  // Fundo do cabeçalho
+  doc.setFillColor(45, 106, 79);
+  doc.rect(0, 0, 210, 40, 'F');
+
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16);
+  doc.text('COMPROVANTE DE PAGAMENTO', 105, 16, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('Kitnets Beth · Rua Soldado Venceslau Spancesk · Campo Grande, RJ', 105, 25, { align: 'center' });
+  doc.text('Emitido em: ' + new Date().toLocaleDateString('pt-BR'), 105, 33, { align: 'center' });
+
+  y = 56;
+  doc.setTextColor(30,30,30);
+
+  // Caixa principal
+  doc.setFillColor(247, 245, 240);
+  doc.setDrawColor(82, 183, 136);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margL, y - 6, largUtil, 90, 4, 4, 'FD');
+
+  y += 4;
+
+  function campo(label, val, destaque) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100,100,100);
+    doc.text(label.toUpperCase(), margL + 8, y);
+    y += 5;
+    if (destaque) {
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.setTextColor(45, 106, 79);
+    } else {
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 30);
+    }
+    doc.text(val, margL + 8, y);
+    doc.setTextColor(30,30,30);
+    y += destaque ? 10 : 8;
+  }
+
+  campo('Locatário', nome);
+  campo('Imóvel / Kitnet', kitnet);
+  campo('Referente a', periodo);
+  campo('Valor Pago', 'R$ ' + valor + '   (' + valorExtenso(valor) + ')', true);
+  campo('Forma de pagamento', forma);
+  campo('Data do pagamento', fmtData(data));
+  if (obs) campo('Observação', obs);
+
+  y += 10;
+
+  // Linha de assinatura
+  doc.setDrawColor(150,150,150);
+  doc.line(margL, y, margL + 80, y);
+  y += 5;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(100,100,100);
+  doc.text('Assinatura da Locadora – Beth', margL, y);
+
+  y += 20;
+  // Aviso legal
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(170,170,170);
+  const aviso = 'Este comprovante é um documento de quitação do valor acima especificado. Guarde para sua segurança.';
+  const linhas = doc.splitTextToSize(aviso, largUtil);
+  doc.text(linhas, 105, y, { align: 'center' });
+
+  doc.save('Comprovante_' + nome.split(' ')[0] + '_' + fmtData(data).replace(/\//g,'-') + '.pdf');
+}
+</script>
+</body>
+</html>
